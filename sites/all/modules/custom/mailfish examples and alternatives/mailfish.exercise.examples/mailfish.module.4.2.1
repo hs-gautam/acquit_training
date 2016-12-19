@@ -1,0 +1,44 @@
+<?php
+/**
+ * @file
+ * Collect email addresses from a form within a page or block.
+ */
+/**
+ * Implements hook_menu().
+ */
+function mailfish_menu() {
+  $items = array();
+  $items['node/%/subscribe'] = array(
+    'title' => 'Subscribe',
+    'description' => 'Subscribe to this node',
+    'page callback' => 'mailfish_subscribe',
+    'access arguments' => array('access content'),
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+}
+function mailfish_subscribe(){
+  return drupal_get_form('mailfish_email_form');
+  }
+ 
+  function mailfish_email_form($form, $form_state, $nid = 0) {
+  global $user;
+  $form['email'] = array(
+    '#title' => t('Email address'),
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#description' => t('Join our mailing list'),
+    '#required' => TRUE,
+    '#default_value' => isset($user->mail) ? $user->mail : '',
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Sign Up'),
+  );
+  $form['nid'] = array(
+    '#type' => 'hidden',
+    '#value' => $nid,
+  );
+  return $form;
+}

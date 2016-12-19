@@ -1,0 +1,129 @@
+<?php
+/**
+ * @file
+ * Collect email addresses from a form within a page or block.
+ */
+/**
+ * Implements hook_menu().
+ */
+function mailfish_menu() {
+  $items = array();
+  $items['node/%/subscribe'] = array(
+    'title' => 'Subscribe',
+    'description' => 'Subscribe to this node',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mailfish_email_form',1),
+    'access arguments' => array('submit mailshish signups'),
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/config/content/mailfish'] = array(
+    'title' => 'Mailfish Settings',
+    'description' => 'Administer Mailfish Settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mailfish_admin_settings_form'),
+    'access arguments' => array('administer mailfish
+     settings'),
+    'file' => 'mailfish.admin.inc',
+  );
+
+  return $items;
+}
+function mailfish_email_form($form, $form_state, $nid = 0) {
+  global $user;
+  $form['email'] = array(
+    '#title' => t('Email address'),
+    '#type' => 'textfield',
+    '#size' => 25,
+    '#description' => t('Join our mailing list'),
+    '#required' => TRUE,
+    '#default_value' => isset($user->mail) ? $user->mail : '',
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Sign Up'),
+  );
+  $form['nid'] = array(
+    '#type' => 'hidden',
+    '#value' => $nid,
+  );
+  return $form;
+}
+function mailfish_email_form_validate($form, &$form_state) {
+  $email = $form_state['values']['email'];
+  if (!valid_email_address($email)) {
+    $message = t('The address %email is not a valid email address. Please re-enter your address.', array('%email' => $email));
+    form_set_error('email', $message);
+  }
+$nid = $form_state['values']['nid'];
+$previous_signup = db_query("SELECT mail FROM {mailfish} WHERE nid = :nid AND 
+mail = :mail", array('nid' => $nid, 'mail' => $email))->fetchField();
+  if ($previous_signup) {
+    form_set_error('email', t('The address %email is already subscribed to this 
+list.', array('%email' => $email)));
+  }
+}
+function mailfish_email_form_submit($form, &$form_state) {
+  $nid = isset($form_state['values']['nid']) ? $form_state['values']['nid'] : 0;
+  if ($nid && is_numeric($nid)) { 
+    mailfish_signup($form_state['values']['email'], $nid);
+    drupal_set_message(t('Thank you for joining the mailing list. You have been added as %email.', array('%email' => $form_state['values']['email'])));
+  }
+}
+function mailfish_signup($email, $nid) {
+  global $user;
+  $value = array(
+    'nid' => $nid,
+    'uid' => $user->uid,
+    'mail' => $email,
+    'created' => time(),
+  );  
+  drupal_write_record('mailfish', $value);
+}
+function mailfish_permission() {
+  $perm = array(
+    'submit mailfish signups' => array(
+      'title' => t('Submit Mailfish Signups'),
+    ),  
+    'view mailfish report' => array(
+      'title' => t('View Mailfish Subscriptions Report'),
+    ),  
+    'administer mailfish settings' => array(
+      'title' => t('Administer Mailfish Settings'),
+    )   
+  );  
+  return $perm;
+}
+function mailfish_block_info() {
+  $blocks = array();
+  $blocks['mailfish_subscribe'] = array(
+    'info' => t('Mailfish Signup Form'),
+  );
+  return $blocks;
+} 
+function mailfish_block_view($delta) {
+  $block = array();
+  switch ($delta) {
+  case 'mailfish_subscribe':
+    if (arg(0) == 'node' && is_numeric(arg(1))) {
+      $nid = arg(1);
+	  $form = drupal_get_form('mailfish_email_form',$nid);
+      $block = array(
+        'subject' => t('Sign Up for this node'),
+        'content' => theme('mailfish_block', array('form' => drupal_render($form))),
+      );
+    } 
+    break;
+  }
+  return $block;
+}
+function mailfish_theme() {
+  $theme = array();
+  $theme['mailfish_block'] = array(
+    'variables' => array(
+      'form' => '',
+    ),
+    'template' => 'mailfish-block',
+  );
+  return $theme;
+}
+

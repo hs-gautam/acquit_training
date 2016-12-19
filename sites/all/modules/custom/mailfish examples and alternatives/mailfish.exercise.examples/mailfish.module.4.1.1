@@ -1,0 +1,22 @@
+<?php
+/**
+ * @file
+ * Collect email addresses from a form within a page or block.
+ */
+/**
+ * Implements hook_menu().
+ */
+function mailfish_menu() {
+  $items = array();
+  $items['node/%/subscribe'] = array(
+    'title' => 'Subscribe',
+    'description' => 'Subscribe to this node',
+    'page callback' => 'mailfish_subscribe',
+    'access arguments' => array('access content'),
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+}
+function mailfish_subscribe(){
+  return 'Placeholder text for the subscribe tab.';
+  } 

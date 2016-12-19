@@ -1,0 +1,4 @@
+name = My Module
+description = My first Drupal module
+core = 7.x
+scripts[] = /js/mymodule.js

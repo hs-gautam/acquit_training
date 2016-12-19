@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * Implements hook_init().
+ */
+function mymodule_init(){
+  // dpm("It's working!");
+}
+
+/**
+ * Implements hook_menu().
+ * */
+function mymodule_menu(){
+  $items = array();
+  $items['mymodule'] = array(
+    'title' => 'My Page',
+    'description' => 'Landing Page for My Module',
+    'page callback' => 'mymodule_callback',
+    'access arguments' => array('access content'),
+     );
+  return $items;
+}
+
+/**
+ * @desc Menu callback
+ * */
+function mymodule_callback(){
+  // return '<p class="my-title">My first page callback</p>';
+  $form['selected'] = array(
+       '#type' => 'select',
+       '#title' => t('Selected'),
+       '#options' => array(
+          0 => t('No'),
+         1 => t('Yes'),
+       ),
+       // '#default_value' => $category['selected'],
+       '#description' => t('Set this to <em>Yes</em> if you would like this category to be selected by default.'),
+   );
+  $path = drupal_get_path('module', 'mymodule') . '/js/mymodule.js';
+  drupal_add_js($path);
+  return $form;
+}
+
+/**
+ * Implements hook_form_alter().
+ * */
+function mymodule_form_alter(&$form,$form_state,$form_id){
+  // die();
+  dsm($form);
+  print_r($form_id);
+  if($form_id == 'comment_node_article_form'){
+    dsm($form);
+    $form['actions']['submit']['#value'] = t('Comment!!!!!!!!!');
+    unset($form['actions']['preview']);
+    $form['title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('My Subject'),
+      '#default_value' => 'Enter the subject',
+      '#size' => 60,
+      '#maxlength' => 128,
+      '#required' => TRUE,
+    );
+	}
+  if ($form_id == 'user_profile_form') {
+    $form['first_name'] = array(
+      '#type' => 'textfield',
+      '#title' => t('First name'),
+      // '#default_value' => 'Enter the subject',
+      '#size' => 60,
+      '#maxlength' => 128,
+      '#required' => TRUE,
+    );
+    $form['#submit'][] = 'mymodule_user_profile_submit';
+  }
+}
+
+
+function mymodule_user_profile_submit($form, $form_state) {
+  dsm($form_state);
+}
